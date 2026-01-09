@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mom Laundry - ដៃម៉ែបោកអ៊ុត</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons (for UI elements) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts: Battambang for Khmer text -->
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Kantumruy+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Material Symbols (for replacing photos) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <style>
+        body {
+            font-family: 'Kantumruy Pro', 'Battambang', sans-serif;
+        }
+        .hero-bg {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1517677208171-0bc6742058e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Bubble Animation */
+        .bubbles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            top: 0;
+            left: 0;
+        }
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: rise 15s infinite ease-in;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .bubble:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-duration: 8s; animation-delay: 0s; }
+        .bubble:nth-child(2) { width: 40px; height: 40px; left: 20%; animation-duration: 5s; animation-delay: 1s; }
+        .bubble:nth-child(3) { width: 50px; height: 50px; left: 35%; animation-duration: 7s; animation-delay: 2s; }
+        .bubble:nth-child(4) { width: 80px; height: 80px; left: 50%; animation-duration: 11s; animation-delay: 0s; }
+        .bubble:nth-child(5) { width: 35px; height: 35px; left: 55%; animation-duration: 6s; animation-delay: 1s; }
+        .bubble:nth-child(6) { width: 45px; height: 45px; left: 65%; animation-duration: 8s; animation-delay: 3s; }
+        .bubble:nth-child(7) { width: 90px; height: 90px; left: 70%; animation-duration: 12s; animation-delay: 2s; }
+        .bubble:nth-child(8) { width: 25px; height: 25px; left: 80%; animation-duration: 6s; animation-delay: 2s; }
+        .bubble:nth-child(9) { width: 15px; height: 15px; left: 70%; animation-duration: 5s; animation-delay: 1s; }
+        .bubble:nth-child(10) { width: 90px; height: 90px; left: 25%; animation-duration: 10s; animation-delay: 4s; }
+
+        @keyframes rise {
+            0% {
+                bottom: -100px;
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(100px);
+            }
+            100% {
+                bottom: 1000px;
+                transform: translateX(-200px);
+            }
+        }
+        
+        /* Custom styles for icon containers */
+        .process-icon-wrapper {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            border: 4px solid #fff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: #eff6ff; /* blue-50 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2563eb; /* blue-600 */
+        }
+        
+        .service-icon-wrapper {
+            height: 192px; /* h-48 equivalent */
+            background-color: #eff6ff; /* blue-50 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .group:hover .service-icon-wrapper {
+            background-color: #dbeafe; /* blue-100 */
+        }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Custom Icon components using Lucide (keeping UI icons clean)
+        const PhoneIcon = () => <i data-lucide="phone" className="w-4 h-4 mr-2"></i>;
+        const ClockIcon = () => <i data-lucide="clock" className="w-4 h-4 mr-2"></i>;
+        const MenuIcon = () => <i data-lucide="menu" className="w-6 h-6"></i>;
+        const XIcon = () => <i data-lucide="x" className="w-6 h-6"></i>;
+        const ShirtIcon = () => <i data-lucide="shirt" className="w-8 h-8 text-blue-500"></i>;
+        const TruckIcon = () => <i data-lucide="truck" className="w-8 h-8 text-blue-500"></i>;
+        const SparklesIcon = () => <i data-lucide="sparkles" className="w-8 h-8 text-blue-500"></i>;
+        const CheckCircleIcon = () => <i data-lucide="check-circle" className="w-5 h-5 text-green-500 mr-2"></i>;
+
+        function App() {
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+            useEffect(() => {
+                lucide.createIcons();
+            }, [isMenuOpen]);
+
+            const scrollToSection = (id) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                    setIsMenuOpen(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    {/* Top Bar */}
+                    <div className="bg-blue-600 text-white py-2 px-4">
+                        <div className="container mx-auto flex flex-col md:flex-row justify-between items-center text-sm">
+                            <div className="flex items-center mb-2 md:mb-0">
+                                <span className="flex items-center mr-6">
+                                    <ClockIcon /> ម៉ោង ៧ព្រឹក - ៨យប់
+                                </span>
+                                <span className="flex items-center">
+                                    <PhoneIcon /> (+855) 070 777 960
+                                </span>
+                            </div>
+                            <div className="hidden md:block">
+                                បើករៀងរាល់ថ្ងៃ
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Navigation */}
+                    <nav className="bg-white shadow-md sticky top-0 z-50">
+                        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+                            <div className="text-2xl font-bold text-blue-700 flex items-center">
+                                <span className="mr-2 text-3xl">🧺</span> ដៃម៉ែបោកអ៊ុត
+                            </div>
+                            
+                            {/* Desktop Menu */}
+                            <div className="hidden md:flex space-x-6 text-gray-700 font-medium">
+                                <button onClick={() => scrollToSection('home')} className="hover:text-blue-600">ទំព័រដើម</button>
+                                <button onClick={() => scrollToSection('services')} className="hover:text-blue-600">សេវាកម្ម</button>
+                                <button onClick={() => scrollToSection('process')} className="hover:text-blue-600">ដំណើរការ</button>
+                                <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-600">តម្លៃ</button>
+                                <button onClick={() => scrollToSection('partners')} className="hover:text-blue-600">ដៃគូ</button>
+                                <button onClick={() => scrollToSection('contact')} className="hover:text-blue-600">ទំនាក់ទំនង</button>
+                            </div>
+
+                            {/* Mobile Menu Button */}
+                            <div className="md:hidden">
+                                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-700">
+                                    {isMenuOpen ? <XIcon /> : <MenuIcon />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Mobile Menu Dropdown */}
+                        {isMenuOpen && (
+                            <div className="md:hidden bg-white px-4 py-2 border-t">
+                                <button onClick={() => scrollToSection('home')} className="block w-full text-left py-2 text-gray-700">ទំព័រដើម</button>
+                                <button onClick={() => scrollToSection('services')} className="block w-full text-left py-2 text-gray-700">សេវាកម្ម</button>
+                                <button onClick={() => scrollToSection('process')} className="block w-full text-left py-2 text-gray-700">ដំណើរការ</button>
+                                <button onClick={() => scrollToSection('pricing')} className="block w-full text-left py-2 text-gray-700">តម្លៃ</button>
+                                <button onClick={() => scrollToSection('partners')} className="block w-full text-left py-2 text-gray-700">ដៃគូ</button>
+                                <button onClick={() => scrollToSection('contact')} className="block w-full text-left py-2 text-gray-700">ទំនាក់ទំនង</button>
+                            </div>
+                        )}
+                    </nav>
+
+                    {/* Hero Section */}
+                    <header id="home" className="hero-bg h-[600px] flex items-center justify-center text-white text-center px-4">
+                        {/* Animation Container */}
+                        <div className="bubbles">
+                            <div className="bubble"></div>
+                            <div className="bubble"></div>
+                            <div className="bubble"></div>
+                            <div className="bubble"></div>
+                            <div className="bubble"></div>
+                            <div className="bubble"></div>
+                            <div className="bubble"></div>
+                            <div className="bubble"></div>
+                            <div className="bubble"></div>
+                            <div className="bubble"></div>
+                        </div>
+
+                        <div className="max-w-3xl relative z-10">
+                            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
+                                អ្នកឯកទេសក្នុងការថែទាំសំលៀកបំពាក់
+                            </h1>
+                            <p className="text-lg md:text-xl mb-8 opacity-95 font-medium drop-shadow-md">
+                                យើងជាអ្នកជំនាញក្នុងការបោកអ៊ុតទំនើប និងបោកស្ងួតដោយប្រើបច្ចេកវិទ្យាចុងក្រោយបំផុត ដើម្បីដំណោះស្រាយស្នាមប្រឡាក់ និងរក្សាគុណភាពសំលៀកបំពាក់របស់អ្នក។
+                            </p>
+                            <button onClick={() => scrollToSection('order-form')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 transform hover:scale-105 shadow-xl border-2 border-transparent hover:border-white">
+                                កុម្ម៉ង់ឥឡូវនេះ
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* Features/Values Section */}
+                    <section className="py-16 bg-white">
+                        <div className="container mx-auto px-4">
+                            <div className="text-center mb-12">
+                                <h2 className="text-3xl font-bold text-gray-800 mb-4">គុណតម្លៃសេវាកម្មយើងខ្ញុំ</h2>
+                                <div className="w-20 h-1 bg-blue-600 mx-auto"></div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div className="p-6 border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition bg-blue-50/50">
+                                    <div className="text-blue-600 mb-4 flex justify-center"><SparklesIcon /></div>
+                                    <h3 className="text-xl font-bold mb-3 text-center">មានបទពិសោធន៍ និងជំនាញ</h3>
+                                    <p className="text-gray-600 text-center">យើងយកចិត្តទុកដាក់បំផុតចំពោះសំលៀកបំពាក់របស់អ្នក ផ្អែកលើជំនាញ និងបទពិសោធន៍ ដើម្បីរក្សាភាពស្រស់ស្អាត។</p>
+                                </div>
+                                <div className="p-6 border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition bg-blue-50/50">
+                                    <div className="text-blue-600 mb-4 flex justify-center"><TruckIcon /></div>
+                                    <h3 className="text-xl font-bold mb-3 text-center">សេវាដឹកជញ្ជូន និងភាពងាយស្រួល</h3>
+                                    <p className="text-gray-600 text-center">គ្រាន់តែទាក់ទងមកយើង យើងនឹងទៅយកសំលៀកបំពាក់ដល់កន្លែង ហើយដឹកជូនវិញទាន់ពេលវេលា។</p>
+                                </div>
+                                <div className="p-6 border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition bg-blue-50/50">
+                                    <div className="text-blue-600 mb-4 flex justify-center"><ShirtIcon /></div>
+                                    <h3 className="text-xl font-bold mb-3 text-center">តម្លៃសមរម្យ និងគុណភាព</h3>
+                                    <p className="text-gray-600 text-center">តម្លៃសាកសមបំផុតក្នុងការចំណាយ ដើម្បីចំណេញទាំងពេលវេលា និងថវិកា ព្រមទាំងទទួលបានគុណភាពខ្ពស់។</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Services Section with Google Icons */}
+                    <section id="services" className="py-16 bg-gray-100">
+                        <div className="container mx-auto px-4">
+                            <div className="text-center mb-12">
+                                <h2 className="text-3xl font-bold text-gray-800 mb-4">សេវាកម្មយើងខ្ញុំ</h2>
+                                <p className="text-gray-600">យើងផ្តល់ជូននូវសេវាកម្មចម្រុះដើម្បីបំពេញតម្រូវការរបស់អ្នក</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {/* Washing */}
+                                <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition group">
+                                    <div className="service-icon-wrapper">
+                                        <span className="material-symbols-outlined text-blue-500" style={{fontSize: '80px'}}>local_laundry_service</span>
+                                    </div>
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-bold mb-2 text-blue-800">ផ្នែកបោកគក់</h3>
+                                        <p className="text-gray-600 text-sm">យើងប្រើប្រាស់ម៉ាស៊ីនមានបច្ចេកវិទ្យាក្នុងការកម្ចាត់ស្នាមប្រឡាក់ រក្សាពណ៌ និងថែទាំសាច់ក្រណាត់។</p>
+                                    </div>
+                                </div>
+                                
+                                {/* Drying/Hanging */}
+                                <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition group">
+                                    <div className="service-icon-wrapper">
+                                        <span className="material-symbols-outlined text-orange-400" style={{fontSize: '80px'}}>wb_sunny</span>
+                                    </div>
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-bold mb-2 text-blue-800">ផ្នែកហាល</h3>
+                                        <p className="text-gray-600 text-sm">ធានាការហាលដោយបច្ចេកទេស រក្សាភាពស្រស់ស្អាត និងមិនធ្វើឱ្យសាកពណ៌សំលៀកបំពាក់។</p>
+                                    </div>
+                                </div>
+
+                                {/* Ironing */}
+                                <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition group">
+                                    <div className="service-icon-wrapper">
+                                        <span className="material-symbols-outlined text-blue-500" style={{fontSize: '80px'}}>iron</span>
+                                    </div>
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-bold mb-2 text-blue-800">ផ្នែកអ៊ុត</h3>
+                                        <p className="text-gray-600 text-sm">យើងជ្រើសរើសម៉ាស៊ីនអ៊ុតចំហាយទឹក ធ្វើឱ្យជាប់ស្នាមភ្លីយ៉ាងស្រស់ស្អាត និងមិនធ្វើឱ្យខូចសាច់ក្រណាត់។</p>
+                                    </div>
+                                </div>
+
+                                {/* Packing */}
+                                <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition group">
+                                    <div className="service-icon-wrapper">
+                                        <span className="material-symbols-outlined text-blue-500" style={{fontSize: '80px'}}>inventory_2</span>
+                                    </div>
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-bold mb-2 text-blue-800">ផ្នែកវេចខ្ចប់</h3>
+                                        <p className="text-gray-600 text-sm">វេចខ្ចប់ដោយប្រុងប្រយ័ត្នបំផុត ដើម្បីរក្សានូវភាពស្រស់ស្អាត និងមានរបៀបរៀបរយ។</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Process Section with Google Icons */}
+                    <section id="process" className="py-16 bg-white">
+                        <div className="container mx-auto px-4">
+                            <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">ដំណើរការបោកអ៊ុតទំនើបក្នុង ៤ ដំណាក់កាល</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+                                {/* Connector Line (Desktop) */}
+                                <div className="hidden md:block absolute top-12 left-0 w-full h-1 bg-blue-100 -z-10 transform translate-y-4"></div>
+                                
+                                <div className="text-center bg-white p-4">
+                                    <div className="process-icon-wrapper">
+                                        <span className="material-symbols-outlined" style={{fontSize: '48px'}}>checkroom</span>
+                                    </div>
+                                    <div className="inline-block bg-blue-600 text-white text-xs px-2 py-1 rounded-full mb-2">Step 1</div>
+                                    <h3 className="text-xl font-bold mb-2">ជំហានទី១</h3>
+                                    <p className="text-gray-600 text-sm">ពិនិត្យ និងប្រមូលសំលៀកបំពាក់តាមប្រភេទ ជៀសវាងចេញពណ៌</p>
+                                </div>
+                                <div className="text-center bg-white p-4">
+                                    <div className="process-icon-wrapper">
+                                        <span className="material-symbols-outlined" style={{fontSize: '48px'}}>water_drop</span>
+                                    </div>
+                                    <div className="inline-block bg-blue-600 text-white text-xs px-2 py-1 rounded-full mb-2">Step 2</div>
+                                    <h3 className="text-xl font-bold mb-2">ជំហានទី២</h3>
+                                    <p className="text-gray-600 text-sm">បោកគក់ជម្រះក្អែល និងសម្លាប់មេរោគដោយម៉ាស៊ីន</p>
+                                </div>
+                                <div className="text-center bg-white p-4">
+                                    <div className="process-icon-wrapper">
+                                        <span className="material-symbols-outlined" style={{fontSize: '48px'}}>iron</span>
+                                    </div>
+                                    <div className="inline-block bg-blue-600 text-white text-xs px-2 py-1 rounded-full mb-2">Step 3</div>
+                                    <h3 className="text-xl font-bold mb-2">ជំហានទី៣</h3>
+                                    <p className="text-gray-600 text-sm">អ៊ុតដោយប្រើម៉ាស៊ីនចំហាយទឹក ដោយរក្សាគុណភាពខ្ពស់</p>
+                                </div>
+                                <div className="text-center bg-white p-4">
+                                    <div className="process-icon-wrapper">
+                                        <span className="material-symbols-outlined" style={{fontSize: '48px'}}>inventory</span>
+                                    </div>
+                                    <div className="inline-block bg-blue-600 text-white text-xs px-2 py-1 rounded-full mb-2">Step 4</div>
+                                    <h3 className="text-xl font-bold mb-2">ជំហានទី៤</h3>
+                                    <p className="text-gray-600 text-sm">វេចខ្ចប់ដោយមានរបៀបរៀបរយតាមបច្ចេកទេសបត់</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Pricing Section */}
+                    <section id="pricing" className="py-16 bg-blue-50">
+                        <div className="container mx-auto px-4">
+                            <div className="text-center mb-12">
+                                <h2 className="text-3xl font-bold text-gray-800 mb-4">តម្លៃសេវាកម្ម</h2>
+                                <p className="text-gray-600">តម្លៃសមរម្យសម្រាប់អ្នកគ្រប់គ្នា</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                                <div className="bg-white p-8 rounded-2xl shadow-md text-center hover:shadow-xl transition transform hover:-translate-y-2 flex flex-col items-center">
+                                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-blue-600"><ShirtIcon /></div>
+                                    <h3 className="text-2xl font-bold text-gray-800 mb-4">បោកគក់</h3>
+                                    <div className="text-4xl font-bold text-blue-600 mb-2">១៥០០៛</div>
+                                    <div className="text-gray-500 mb-6">ក្នុងមួយគីឡូ</div>
+                                    <ul className="text-left space-y-3 mb-8 w-full">
+                                        <li className="flex items-center"><CheckCircleIcon /> បោកគក់ស្អាត</li>
+                                        <li className="flex items-center"><CheckCircleIcon /> ទឹកក្រអូប</li>
+                                        <li className="flex items-center"><CheckCircleIcon /> បត់យ៉ាងស្អាត</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-white p-8 rounded-2xl shadow-md text-center border-2 border-blue-500 transform scale-105 z-10 flex flex-col items-center">
+                                    <div className="bg-blue-600 text-white text-xs font-bold uppercase py-1 px-3 rounded-full inline-block mb-4">ពេញនិយម</div>
+                                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-blue-600"><SparklesIcon /></div>
+                                    <h3 className="text-2xl font-bold text-gray-800 mb-4">បោកអ៊ុត វេចខ្ចប់</h3>
+                                    <div className="text-4xl font-bold text-blue-600 mb-2">២០០០៛</div>
+                                    <div className="text-gray-500 mb-6">ក្នុងមួយកំប្លេ</div>
+                                    <ul className="text-left space-y-3 mb-8 w-full">
+                                        <li className="flex items-center"><CheckCircleIcon /> បោកគក់</li>
+                                        <li className="flex items-center"><CheckCircleIcon /> អ៊ុតចំហាយទឹក</li>
+                                        <li className="flex items-center"><CheckCircleIcon /> ដាក់ស្បោងព្យួរ</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-white p-8 rounded-2xl shadow-md text-center hover:shadow-xl transition transform hover:-translate-y-2 flex flex-col items-center">
+                                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-blue-600"><TruckIcon /></div>
+                                    <h3 className="text-2xl font-bold text-gray-800 mb-4">បោកស្ងួត</h3>
+                                    <div className="text-4xl font-bold text-blue-600 mb-2">១០,០០០៛</div>
+                                    <div className="text-gray-500 mb-6">ក្នុងមួយកំប្លេ</div>
+                                    <ul className="text-left space-y-3 mb-8 w-full">
+                                        <li className="flex items-center"><CheckCircleIcon /> សម្អាតស្នាមប្រឡាក់</li>
+                                        <li className="flex items-center"><CheckCircleIcon /> ថែរក្សាសាច់ក្រណាត់ពិសេស</li>
+                                        <li className="flex items-center"><CheckCircleIcon /> វេចខ្ចប់ពិសេស</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Partners Section */}
+                    <section id="partners" className="py-16 bg-white">
+                        <div className="container mx-auto px-4">
+                            <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">ដៃគូសេវាកម្មខ្នាតធំ</h2>
+                            <p className="text-center text-gray-600 max-w-3xl mx-auto mb-12">
+                                យើងរីករាយរួមសហការជាដៃគូជាមួយសាជីវកម្មធំៗ ដូចជា សណ្ឋាគារ ផ្ទះសំណាក់ ភោជនីដ្ឋាន និងក្រុមហ៊ុនផ្សេងៗ ដើម្បីផ្តល់ជូនសេវាកម្មបោកអ៊ុតដែលមានគុណភាព និងល្បឿនលឿន។
+                            </p>
+                            
+                            <div className="flex flex-wrap justify-center gap-4">
+                                {['សណ្ឋាគារ', 'ផ្ទះសំណាក់', 'អាផាតមិន', 'ភោជនីដ្ឋាន', 'ក្រុមហ៊ុន', 'មន្ទីរពេទ្យ', 'សាលារៀន', 'ក្លឹបហាត់ប្រាណ', 'ហាងកែសម្ផស្ស'].map((item, index) => (
+                                    <span key={index} className="px-6 py-3 bg-gray-100 rounded-full text-gray-700 font-medium hover:bg-blue-100 hover:text-blue-700 transition cursor-default">
+                                        {item}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Testimonials with Google Icons */}
+                    <section className="py-16 bg-gray-50">
+                        <div className="container mx-auto px-4">
+                            <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">មតិអតិថិជន</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
+                                    <div className="w-16 h-16 rounded-full mx-auto mb-4 bg-blue-100 flex items-center justify-center text-blue-600">
+                                        <span className="material-symbols-outlined" style={{fontSize: '40px'}}>person</span>
+                                    </div>
+                                    <p className="text-gray-600 italic mb-4">"សំលៀកបំពាក់ត្រូវបានត្រលប់មកវិញយ៉ាងស្អាត និងមានក្លិនក្រអូបដ៏អស្ចារ្យ។"</p>
+                                    <div className="font-bold text-gray-800">- លោក ពិសិដ្ឋ</div>
+                                </div>
+                                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
+                                    <div className="w-16 h-16 rounded-full mx-auto mb-4 bg-pink-100 flex items-center justify-center text-pink-600">
+                                        <span className="material-symbols-outlined" style={{fontSize: '40px'}}>person_2</span>
+                                    </div>
+                                    <p className="text-gray-600 italic mb-4">"ប្រសើរណាស់ ដៃម៉ែបោកអ៊ុតបានជួយសម្រួលការងារខ្ញុំច្រើនណាស់ ពីការបោកគក់នេះ។"</p>
+                                    <div className="font-bold text-gray-800">- កញ្ញា មុំ</div>
+                                </div>
+                                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center">
+                                    <div className="w-16 h-16 rounded-full mx-auto mb-4 bg-blue-100 flex items-center justify-center text-blue-600">
+                                        <span className="material-symbols-outlined" style={{fontSize: '40px'}}>person</span>
+                                    </div>
+                                    <p className="text-gray-600 italic mb-4">"ខ្ញុំរវល់ច្រើនណាស់ ចឹងបានហាងបោកអ៊ុតជួយបោកអ៊ុតសំលៀកបំពាក់សម្រាប់ខ្ញុំធ្វើការ។"</p>
+                                    <div className="font-bold text-gray-800">- លោក សំបូរ</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Order Form & Contact */}
+                    <section id="contact" className="py-16 bg-white">
+                        <div className="container mx-auto px-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                                {/* Contact Info */}
+                                <div>
+                                    <h2 className="text-3xl font-bold text-gray-800 mb-6">ទំនាក់ទំនងយើងខ្ញុំ</h2>
+                                    <div className="space-y-6 text-gray-600">
+                                        <div className="flex items-start">
+                                            <div className="bg-blue-100 p-3 rounded-full mr-4 text-blue-600">
+                                                <i data-lucide="map-pin" className="w-6 h-6"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-800">អាសយដ្ឋាន</h4>
+                                                <p>ផ្ទះលេខ ១៦០ ផ្លូវ ២១៧ (ចំការដូង) សង្កាត់ដង្កោ ខណ្ឌដង្កោ រាជធានីភ្នំពេញ</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start">
+                                            <div className="bg-blue-100 p-3 rounded-full mr-4 text-blue-600">
+                                                <PhoneIcon />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-800">លេខទូរស័ព្ទ</h4>
+                                                <p>(+855) 070 777 960</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start">
+                                            <div className="bg-blue-100 p-3 rounded-full mr-4 text-blue-600">
+                                                <i data-lucide="mail" className="w-6 h-6"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-800">អ៊ីមែល</h4>
+                                                <p>info@momlaundry.me</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start">
+                                            <div className="bg-blue-100 p-3 rounded-full mr-4 text-blue-600">
+                                                <ClockIcon />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-gray-800">ម៉ោងធ្វើការ</h4>
+                                                <p>៧ព្រឹក - ៨យប់ (រៀងរាល់ថ្ងៃ)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mt-8">
+                                         {/* Google Maps Placeholder with Icon */}
+                                         <div className="w-full h-64 bg-gray-100 rounded-xl overflow-hidden shadow-inner flex items-center justify-center relative border border-gray-200">
+                                            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-gray-50">
+                                                <span className="material-symbols-outlined text-gray-300" style={{fontSize: '80px'}}>map</span>
+                                            </div>
+                                            <div className="relative z-10 bg-white px-4 py-2 rounded-lg shadow-lg flex items-center">
+                                                <span className="text-blue-600 font-bold flex items-center"><i data-lucide="map-pin" className="w-4 h-4 mr-2"></i> ទីតាំងនៅលើផែនទី</span>
+                                            </div>
+                                         </div>
+                                    </div>
+                                </div>
+
+                                {/* Form */}
+                                <div id="order-form" className="bg-gray-50 p-8 rounded-2xl shadow-lg border border-gray-100">
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">ទម្រង់កុម្ម៉ង់ (Order Form)</h2>
+                                    <form onSubmit={(e) => {e.preventDefault(); alert("ការកុម្ម៉ង់របស់អ្នកត្រូវបានបញ្ជូន! យើងនឹងទាក់ទងទៅអ្នកឆាប់ៗ។");}}>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">ឈ្មោះ *</label>
+                                                <input type="text" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">លេខទូរស័ព្ទ *</label>
+                                                <input type="tel" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required />
+                                            </div>
+                                        </div>
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">អាសយដ្ឋាន *</label>
+                                            <textarea className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="2" required></textarea>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">កាលបរិច្ឆេទយក (Pick Up)</label>
+                                                <input type="date" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">ម៉ោង</label>
+                                                <input type="time" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                                            </div>
+                                        </div>
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">ប្រភេទសាប៊ូ (Detergent)</label>
+                                            <select className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                                <option>Tide</option>
+                                                <option>Gain</option>
+                                                <option>All Free & Clear</option>
+                                                <option>ខ្ញុំនឹងផ្តល់ជូនផ្ទាល់ខ្លួន</option>
+                                            </select>
+                                        </div>
+                                        <div className="mb-6">
+                                            <label className="flex items-center space-x-2">
+                                                <input type="checkbox" className="form-checkbox h-5 w-5 text-blue-600" />
+                                                <span className="text-gray-700">ត្រូវការថង់បោកអ៊ុត?</span>
+                                            </label>
+                                        </div>
+                                        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 transform hover:scale-105">
+                                            បញ្ជូនការកុម្ម៉ង់
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Footer */}
+                    <footer className="bg-gray-900 text-white py-12">
+                        <div className="container mx-auto px-4 text-center">
+                            <h2 className="text-2xl font-bold mb-4">ដៃម៉ែបោកអ៊ុត</h2>
+                            <p className="mb-8 opacity-70">សេវាកម្មបោកអ៊ុតដែលអ្នកអាចទុកចិត្តបាន</p>
+                            <div className="border-t border-gray-800 pt-8 text-sm opacity-60">
+                                &copy; រក្សាសិទ្ធគ្រប់យ៉ាង ២០១៩-២០២៦ ដៃម៉ែបោកអ៊ុត. All rights reserved.
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
